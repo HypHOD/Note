@@ -1,10 +1,11 @@
 package com.gamedemo;
 
 import com.almasb.fxgl.dsl.FXGL;
-import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.component.Component;
+import com.almasb.fxgl.texture.AnimatedTexture;
+import com.almasb.fxgl.texture.AnimationChannel;
 import com.almasb.fxgl.texture.Texture;
-import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 import java.util.Random;
 
@@ -13,8 +14,14 @@ public class GhostComponent extends Component {
     private final double x;
     private final double y;
 
-    private final Texture left;
-    private final Texture right;
+    private Texture left;
+    private Texture right;
+
+    private final AnimationChannel leftAnimation;
+    private final AnimationChannel leftScaredAnimation;
+    private final AnimationChannel rightAnimation;
+    private final AnimationChannel rightScaredAnimation;
+    private AnimatedTexture textureAnimation;
 
     public GhostComponent(String name, double x, double y) {
         this.name = name;
@@ -22,11 +29,16 @@ public class GhostComponent extends Component {
         this.y = y;
         left = FXGL.texture("Ghost1.gif");
         right = FXGL.texture("Ghost2.gif");
+        leftAnimation = new AnimationChannel(FXGL.image("Ghost1.gif"),12,24,24, Duration.seconds(1),0,0);
+        leftScaredAnimation = new AnimationChannel(FXGL.image("GhostScared1.gif"),12,24,24, Duration.seconds(1),0,0);
+        rightAnimation = new AnimationChannel(FXGL.image("Ghost2.gif"),12,24,24, Duration.seconds(1),0,0);
+        rightScaredAnimation = new AnimationChannel(FXGL.image("GhostScared2.gif"),12,24,24, Duration.seconds(1),0,0);
+        textureAnimation = new AnimatedTexture(leftAnimation);
     }
 
     @Override
     public void onAdded() {
-        entity.getViewComponent().addChild(left);
+        entity.getViewComponent().addChild(textureAnimation);
     }
 
     private static final double SPEED = 50;
@@ -62,24 +74,32 @@ public class GhostComponent extends Component {
             entity.translateY(-2);
             dy = 0.0;
             dx = getRandomSpeedAndDirection();
+
         }
 
-        if (dx < 0.0) {
-            entity.getViewComponent().removeChild(left);
-            entity.getViewComponent().addChild(left);
-        } else if (dx > 0.0) {
-            entity.getViewComponent().removeChild(left);
-            entity.getViewComponent().addChild(right);
-        } else {
-            entity.getViewComponent().removeChild(left);
-            entity.getViewComponent().removeChild(right);
-            entity.getViewComponent().addChild(left);
-        }
+//        if (dx < 0.0) {
+//            entity.getViewComponent().removeChild(left);
+//            entity.getViewComponent().addChild(left);
+//        } else if (dx > 0.0) {
+//            entity.getViewComponent().removeChild(left);
+//            entity.getViewComponent().addChild(right);
+//        } else {
+//            entity.getViewComponent().removeChild(left);
+//            entity.getViewComponent().removeChild(right);
+//            entity.getViewComponent().addChild(left);
+//        }
     }
 
-    public void respawn(){
-        entity.removeFromWorld();
-        FXGL.spawn("Ghost",new SpawnData(x,y).put("name",name));
-
+    public void turnBlue(){
+//        left = FXGL.texture("GhostScared1.gif");
+//        right = FXGL.texture("GhostScared2.gif");
+        textureAnimation.loopAnimationChannel(leftScaredAnimation);
     }
+
+    public void turnRed(){
+//        left = FXGL.texture("Ghost1.gif");
+//        right = FXGL.texture("Ghost2.gif");
+        textureAnimation.loopAnimationChannel(rightAnimation);
+    }
+
 }

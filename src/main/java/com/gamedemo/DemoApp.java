@@ -47,7 +47,7 @@ public class DemoApp extends GameApplication {
     private int fps;
     private Entity player;
     private int lifeLeft = 3;
-    private Color ColorOfGhost = Color.RED;
+    public Color ColorOfGhost = Color.RED;
 
 
     enum GameObj{
@@ -126,42 +126,14 @@ public class DemoApp extends GameApplication {
         FXGL.spawn("Background",new SpawnData(0,0).put("width",800).put("height",600));
 
         initLevel();
-        //FXGL.setLevelFromMap("level1.tmx");
-        //添加玩家
-//        player = FXGL.entityBuilder()
-//                .viewWithBBox(new ImageView(FXGL.image("player.png")))
-//                .at(FXGL.getAppCenter())    //设置初始位置
-//                .type(GameObj.PLAYER)   //设置类型,不设置无法碰撞
-//                .collidable()//设置碰撞
-//                .with(new KeepOnScreenComponent())
-//                .with(new DraggableComponent())
-//                .buildAndAttach();
+
 
         //显示fps&gold
         Rectangle2D rectangle2D = new Rectangle2D(100,100,FXGL.getAppWidth()-200,FXGL.getAppHeight()-200);//舞台范围
         FXGL.getGameTimer().runAtInterval(()->{
             FXGL.set(FPS_KEY,fps);
             fps = 0;
-
-            //List<Entity> golds = FXGL.getGameWorld().getEntitiesByType(GameObj.GOLD);
-//            if(golds.size() < 10){
-//                Point2D point2D = FXGLMath.randomPoint(rectangle2D);
-//                while(!FXGL.getGameWorld().getEntitiesInRange(new Rectangle2D(point2D.getX(), point2D.getY(), 10,10)).isEmpty()){
-//                    point2D = FXGLMath.randomPoint(rectangle2D);
-//                }
-//
-//                FXGL.entityBuilder()
-//                        .viewWithBBox(new Circle(10,Color.GOLD))
-//                        .at(point2D)
-//                        .type(GameObj.GOLD)
-//                        .collidable()
-//                        .buildAndAttach();
-//            }
         },Duration.seconds(1));
-
-
-
-
 
     }
 
@@ -232,7 +204,16 @@ public class DemoApp extends GameApplication {
             protected void onCollisionBegin(Entity player, Entity fruit) {
                 fruit.removeFromWorld();
                 //敌人变蓝,可以击杀
+                FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnBlue();
                 ColorOfGhost = Color.BLUE;
+                //敌人变红,无法击杀
+                if(!FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).isEmpty()){
+                    FXGL.getGameTimer().runOnceAfter(() -> {
+                        ColorOfGhost = Color.RED;
+                        FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnRed();
+                    }, Duration.seconds(5));
+                }
+
             }
         });
     }
@@ -265,6 +246,9 @@ public class DemoApp extends GameApplication {
     @Override
     protected void onUpdate(double tpf) {
         fps++;
+        if(ColorOfGhost==Color.BLUE){
+
+        }
     }
 
     private static int startLevel = 1;
