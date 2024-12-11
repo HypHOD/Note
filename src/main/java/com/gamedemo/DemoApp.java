@@ -48,7 +48,7 @@ public class DemoApp extends GameApplication {
 
 
     enum GameObj{
-        PLAYER,GOLD,WALL, PILL, GHOST;
+        PLAYER,GOLD,WALL, PILL, GHOST, FIGHT_FRUIT;
     }
 
 
@@ -207,6 +207,14 @@ public class DemoApp extends GameApplication {
                 player.getComponent(PlayerComponent.class).respawn();
             }
         });
+
+        physics.addCollisionHandler(new CollisionHandler(GameObj.PLAYER,GameObj.FIGHT_FRUIT) {
+            @Override
+            protected void onCollisionBegin(Entity player, Entity fruit) {
+                fruit.removeFromWorld();
+                //敌人变蓝,可以击杀
+            }
+        });
     }
 
     @Override
@@ -228,88 +236,9 @@ public class DemoApp extends GameApplication {
     @Override
     protected void onUpdate(double tpf) {
         fps++;
-
-
     }
 
-
-    public class CustomEntityFactory implements EntityFactory {
-        @Spawns("Ghost")
-        public Entity newGhost(SpawnData spawnData) {
-            return FXGL.entityBuilder()
-                    .type(GameObj.GHOST)
-                    .bbox(new HitBox(BoundingShape.box(20, 20)))
-                    .with(new GhostComponent(spawnData.get("name"), spawnData.getX(), spawnData.getY()))
-                    .collidable()
-                    .build();
-        }
-
-
-
-
-        @Spawns("Enemy")
-        public Entity newEnemy(SpawnData spawnData) {
-            int time = spawnData.get("time");
-            return FXGL.entityBuilder()
-                    .at(FXGL.getAppCenter())
-                    .with(new ExpireCleanComponent(Duration.seconds(time)))
-                    .viewWithBBox(new Rectangle(40,40,Color.RED))
-                    .build();
-        }
-
-        @Spawns("Player")
-        public Entity spawnPlayer(SpawnData spawnData) {
-            PhysicsComponent physics = new PhysicsComponent();
-            physics.setFixtureDef(new FixtureDef().friction(0).density(0));
-            BodyDef bd = new BodyDef();
-            bd.setFixedRotation(true);
-            bd.setType(BodyType.DYNAMIC);
-            physics.setBodyDef(bd);
-            return FXGL.entityBuilder()
-                    .type(GameObj.PLAYER)
-                    .viewWithBBox("player.png")
-                    .with(physics)
-                    .with(new PlayerComponent(spawnData.getX(), spawnData.getY()))
-                    .collidable()
-                    .build();
-        }
-
-        @Spawns("Background")
-        public Entity spawnBackground(SpawnData spawnData) {
-            return FXGL.entityBuilder()
-                    .view(new Rectangle(800,600,Color.BLACK))
-                    .with(new IrremovableComponent())
-                    .zIndex(-100)
-                    .build();
-        }
-
-        @Spawns("Wall")
-        public Entity spawnWall(SpawnData spawnData) {
-            return FXGL.entityBuilder(spawnData)
-                    .type(GameObj.WALL)
-                    .bbox(new HitBox(BoundingShape.box(spawnData.<Integer>get("width"),spawnData.<Integer>get("height"))))
-                    .with(new PhysicsComponent())
-                    .collidable()
-                    .build();
-        }
-
-        @Spawns("Pill")
-        public Entity spawnPill(SpawnData spawnData) {
-            return FXGL.entityBuilder(spawnData)
-                    .type(GameObj.PILL)
-                    .view("pill.png")
-                    .bbox(new HitBox("PILL_HIT_BOX", new Point2D(5, 5), BoundingShape.box(9, 9)))
-                    .collidable()
-                    .build();
-
-        }
-
-
-
-    }
-
-
-    private static int startLevel = 2;
+    private static int startLevel = 1;
     public static void main(String[] args) {
         if(args.length>0) startLevel = Integer.parseInt(args[0]);
         launch(args);
