@@ -19,8 +19,10 @@ import com.almasb.fxgl.physics.box2d.dynamics.BodyType;
 import com.almasb.fxgl.physics.box2d.dynamics.FixtureDef;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -119,10 +121,13 @@ public class DemoApp extends GameApplication {
     protected void initGame() {
 
         System.out.println("initGame");
+
         //添加背景
         FXGL.getGameWorld().addEntityFactory(new CustomEntityFactory());
         FXGL.spawn("Background",new SpawnData(0,0).put("width",800).put("height",600));
-        FXGL.setLevelFromMap("level1.tmx");
+
+        initLevel();
+        //FXGL.setLevelFromMap("level1.tmx");
         //添加玩家
 //        player = FXGL.entityBuilder()
 //                .viewWithBBox(new ImageView(FXGL.image("player.png")))
@@ -161,6 +166,11 @@ public class DemoApp extends GameApplication {
 
     }
 
+    private void initLevel() {
+        FXGL.spawn("Background",new SpawnData(0,0).put("width",800).put("height",600));
+        FXGL.setLevelFromMap("level"+startLevel+".tmx");
+        FXGL.getWorldProperties().setValue(PILL_KEY, 0);
+    }
 
 
     @Override
@@ -173,6 +183,10 @@ public class DemoApp extends GameApplication {
             protected void onCollisionBegin(Entity player, Entity pill) {
                 pill.removeFromWorld();
                 FXGL.inc(PILL_KEY, 1);
+                if(FXGL.geti(PILL_KEY)>=100){
+                    FXGL.inc("level", 1);
+                    Platform.runLater(()->initLevel());
+                }
             }
         });
 
@@ -185,7 +199,7 @@ public class DemoApp extends GameApplication {
 
         physics.addCollisionHandler(new CollisionHandler(GameObj.PLAYER, GameObj.GHOST) {
             @Override
-            protected void onCollisionBegin(Entity player, Entity ghost) {
+            protected void onCollision(Entity player, Entity ghost) {
                 FXGL.getGameWorld()
                         .getEntitiesByType(GameObj.GHOST)
                         .forEach(entity -> entity.getComponent(GhostComponent.class).respawn());
@@ -204,6 +218,11 @@ public class DemoApp extends GameApplication {
         Text fps = FXGL.getUIFactoryService().newText("",Color.WHITE,24);
         fps.textProperty().bind(FXGL.getWorldProperties().intProperty(FPS_KEY).asString("Fps: %d"));
         FXGL.addUINode(fps,0,24);
+
+        Label levellabel = new Label();
+        levellabel.setTextFill(Color.WHITE);
+        levellabel.textProperty().bind(FXGL.getip("level").asString("Level: %d"));
+        FXGL.addUINode(levellabel,FXGL.getAppWidth()-100,24);
     }
 
     @Override
@@ -290,7 +309,7 @@ public class DemoApp extends GameApplication {
     }
 
 
-    private static int startLevel = 1;
+    private static int startLevel = 2;
     public static void main(String[] args) {
         if(args.length>0) startLevel = Integer.parseInt(args[0]);
         launch(args);
