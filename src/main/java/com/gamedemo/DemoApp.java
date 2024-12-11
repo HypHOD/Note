@@ -41,14 +41,17 @@ public class DemoApp extends GameApplication {
     static final String GOLD_KEY = "gold";
     static final String FPS_KEY = "fps";
     static final String PILL_KEY = "pill";
+    static final String LIFE_KEY = "life";
 
     private ImageView background;
     private int fps;
     private Entity player;
+    private int lifeLeft = 3;
+    private Color ColorOfGhost = Color.RED;
 
 
     enum GameObj{
-        PLAYER,GOLD,WALL, PILL, GHOST, FIGHT_FRUIT;
+        PLAYER,GOLD,WALL, PILL, GHOST, FIGHT_FRUIT, LIFE;
     }
 
 
@@ -96,12 +99,7 @@ public class DemoApp extends GameApplication {
             getPlayer().getComponent(PhysicsComponent.class).setVelocityX(SPEED);
             getPlayer().getComponent(PlayerComponent.class).moveRight();
         });
-
-
     }
-
-
-
 
     @Override
     protected void onPreInit() {
@@ -115,6 +113,7 @@ public class DemoApp extends GameApplication {
         vars.put(FPS_KEY, 0);
         vars.put(PILL_KEY, 0);
         vars.put("level", startLevel);
+        vars.put(LIFE_KEY, 3);
     }
 
     @Override
@@ -200,11 +199,31 @@ public class DemoApp extends GameApplication {
         physics.addCollisionHandler(new CollisionHandler(GameObj.PLAYER, GameObj.GHOST) {
             @Override
             protected void onCollision(Entity player, Entity ghost) {
-                FXGL.getGameWorld()
-                        .getEntitiesByType(GameObj.GHOST)
-                        .forEach(entity -> entity.getComponent(GhostComponent.class).respawn());
-                //player.getComponent(PlayerComponent.class).die();
-                player.getComponent(PlayerComponent.class).respawn();
+                if(ColorOfGhost==Color.BLUE) {
+                    ghost.removeFromWorld();
+                    FXGL.inc(PILL_KEY, 10);
+                }else{
+                    player.removeFromWorld();
+                    lifeLeft--;
+                    //减少生命数
+                    List<Entity> lifes = FXGL.getGameWorld().getEntitiesByType(GameObj.LIFE);
+                    for(Entity life:lifes){
+                        life.removeFromWorld();
+                    }
+                    for(int i=0;i<lifeLeft;i++){
+                        FXGL.entityBuilder()
+                                .viewWithBBox(new ImageView(FXGL.image("PacMan2right.gif")))
+                                .at(FXGL.getAppWidth()-100-i*20,48)
+                                .type(GameObj.LIFE)
+                                .buildAndAttach();
+                    }
+
+                    if(lifeLeft==0) FXGL.getGameController().exit();
+                    else{
+                        FXGL.spawn("Player",new SpawnData(0,0).put("width",800).put("height",600));
+                    }
+
+                }
             }
         });
 
@@ -213,6 +232,7 @@ public class DemoApp extends GameApplication {
             protected void onCollisionBegin(Entity player, Entity fruit) {
                 fruit.removeFromWorld();
                 //敌人变蓝,可以击杀
+                ColorOfGhost = Color.BLUE;
             }
         });
     }
@@ -231,6 +251,15 @@ public class DemoApp extends GameApplication {
         levellabel.setTextFill(Color.WHITE);
         levellabel.textProperty().bind(FXGL.getip("level").asString("Level: %d"));
         FXGL.addUINode(levellabel,FXGL.getAppWidth()-100,24);
+
+        //剩余生命数
+        for(int i=0;i<lifeLeft;i++){
+            FXGL.entityBuilder()
+                    .viewWithBBox(new ImageView(FXGL.image("PacMan2right.gif")))
+                    .at(FXGL.getAppWidth()-100-i*20,48)
+                    .type(GameObj.LIFE)
+                    .buildAndAttach();
+        }
     }
 
     @Override
