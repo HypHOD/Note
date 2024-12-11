@@ -48,6 +48,8 @@ public class DemoApp extends GameApplication {
     private Entity player;
     private int lifeLeft = 3;
     public Color ColorOfGhost = Color.RED;
+    private static int startLevel = 1;
+
 
 
     enum GameObj{
@@ -73,15 +75,6 @@ public class DemoApp extends GameApplication {
     @Override
     protected void initInput() {
         System.out.println("initInput");
-//        FXGL.onKey(KeyCode.UP,"MoveUp",()->getPlayer().translateY(-SPEED));
-//        FXGL.onKey(KeyCode.DOWN,"MoveDown",()->getPlayer().translateY(SPEED));
-//        FXGL.onKey(KeyCode.LEFT,"MoveLeft",()->getPlayer().translateX(-SPEED));
-//        FXGL.onKey(KeyCode.RIGHT,"MoveRight",()->getPlayer().translateX(SPEED));
-
-//        FXGL.onKey(KeyCode.UP,"MoveUp",()->getPlayer().getComponent(PhysicsComponent.class).setVelocityY(-SPEED));
-//        FXGL.onKey(KeyCode.DOWN,"MoveDown",()->getPlayer().getComponent(PhysicsComponent.class).setVelocityY(SPEED));
-//        FXGL.onKey(KeyCode.LEFT,"MoveLeft",()->getPlayer().getComponent(PhysicsComponent.class).setVelocityX(-SPEED));
-//        FXGL.onKey(KeyCode.RIGHT,"MoveRight",()->getPlayer().getComponent(PhysicsComponent.class).setVelocityX(SPEED));
 
         FXGL.onKey(KeyCode.UP,"MoveUp",()->{
             getPlayer().getComponent(PhysicsComponent.class).setVelocityY(-SPEED);
@@ -103,7 +96,7 @@ public class DemoApp extends GameApplication {
 
     @Override
     protected void onPreInit() {
-
+        System.out.println("onPreInit");
     }
 
     @Override
@@ -139,8 +132,16 @@ public class DemoApp extends GameApplication {
 
     private void initLevel() {
         FXGL.spawn("Background",new SpawnData(0,0).put("width",800).put("height",600));
-        FXGL.setLevelFromMap("level"+startLevel+".tmx");
+        //FXGL.setLevelFromMap("level"+startLevel+".tmx");
+        setLevelFromMapOrGameOver();
         FXGL.getWorldProperties().setValue(PILL_KEY, 0);
+    }
+
+    private void setLevelFromMapOrGameOver() {
+        try{
+            FXGL.setLevelFromMap("level"+FXGL.geti("level")+".tmx");
+            setLifeLeft();
+        } catch (IllegalArgumentException e){gameOver(true);}
     }
 
 
@@ -152,9 +153,11 @@ public class DemoApp extends GameApplication {
         physics.addCollisionHandler(new CollisionHandler(GameObj.PLAYER, GameObj.PILL) {
             @Override
             protected void onCollisionBegin(Entity player, Entity pill) {
+                FXGL.play("pill.wav");
                 pill.removeFromWorld();
                 FXGL.inc(PILL_KEY, 1);
-                if(FXGL.geti(PILL_KEY)>=100){
+                //???
+                if(FXGL.geti(PILL_KEY)>=50){
                     FXGL.inc("level", 1);
                     Platform.runLater(()->initLevel());
                 }
@@ -173,8 +176,8 @@ public class DemoApp extends GameApplication {
             protected void onCollision(Entity player, Entity ghost) {
                 if(ColorOfGhost==Color.BLUE) {
                     ghost.removeFromWorld();
-                    FXGL.inc(PILL_KEY, 10);
                 }else{
+                    FXGL.play("death.wav");
                     player.removeFromWorld();
                     lifeLeft--;
                     //减少生命数
@@ -190,7 +193,7 @@ public class DemoApp extends GameApplication {
                                 .buildAndAttach();
                     }
 
-                    if(lifeLeft==0) FXGL.getGameController().exit();
+                    if(lifeLeft==0) gameOver(false);
                     else{
                         FXGL.spawn("Player",new SpawnData(0,0).put("width",800).put("height",600));
                     }
@@ -202,20 +205,31 @@ public class DemoApp extends GameApplication {
         physics.addCollisionHandler(new CollisionHandler(GameObj.PLAYER,GameObj.FIGHT_FRUIT) {
             @Override
             protected void onCollisionBegin(Entity player, Entity fruit) {
+                FXGL.play("fruit.wav");
                 fruit.removeFromWorld();
-                //敌人变蓝,可以击杀
+                //敌人变蓝,可以击杀,10秒后变红
                 FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnBlue();
                 ColorOfGhost = Color.BLUE;
-                //敌人变红,无法击杀
+
                 if(!FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).isEmpty()){
                     FXGL.getGameTimer().runOnceAfter(() -> {
                         ColorOfGhost = Color.RED;
                         FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnRed();
-                    }, Duration.seconds(5));
+                    }, Duration.seconds(10));
                 }
 
             }
         });
+    }
+
+    private void gameOver(boolean reachEndOfGame) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Game Over!\n\n");
+        if(reachEndOfGame) builder.append("You have reached the end of the game!\n\n");
+        builder.append("Your score: ").append(FXGL.geti(PILL_KEY)).append("\n");
+        builder.append("Your level: ").append(FXGL.geti("level")).append("\n");
+        builder.append("Your remaining lives: ").append(lifeLeft).append("\n");
+        FXGL.getDialogService().showMessageBox(builder.toString(),()->FXGL.getGameController().gotoGameMenu());
     }
 
     @Override
@@ -229,11 +243,17 @@ public class DemoApp extends GameApplication {
         FXGL.addUINode(fps,0,24);
 
         Label levellabel = new Label();
+        levellabel.setFont(FXGL.getUIFactoryService().newFont(24));
         levellabel.setTextFill(Color.WHITE);
         levellabel.textProperty().bind(FXGL.getip("level").asString("Level: %d"));
-        FXGL.addUINode(levellabel,FXGL.getAppWidth()-100,24);
+        FXGL.addUINode(levellabel,FXGL.getAppWidth()-100,0);
 
         //剩余生命数
+        setLifeLeft();
+
+    }
+
+    private void setLifeLeft() {
         for(int i=0;i<lifeLeft;i++){
             FXGL.entityBuilder()
                     .viewWithBBox(new ImageView(FXGL.image("PacMan2right.gif")))
@@ -246,12 +266,8 @@ public class DemoApp extends GameApplication {
     @Override
     protected void onUpdate(double tpf) {
         fps++;
-        if(ColorOfGhost==Color.BLUE){
-
-        }
     }
 
-    private static int startLevel = 1;
     public static void main(String[] args) {
         if(args.length>0) startLevel = Integer.parseInt(args[0]);
         launch(args);
