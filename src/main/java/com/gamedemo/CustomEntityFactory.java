@@ -46,18 +46,6 @@ public class CustomEntityFactory implements EntityFactory {
     }
 
 
-
-
-    @Spawns("Enemy")
-    public Entity newEnemy(SpawnData spawnData) {
-        int time = spawnData.get("time");
-        return FXGL.entityBuilder()
-                .at(FXGL.getAppCenter())
-                .with(new ExpireCleanComponent(Duration.seconds(time)))
-                .viewWithBBox(new Rectangle(40,40, Color.RED))
-                .build();
-    }
-
     @Spawns("Player")
     public Entity spawnPlayer(SpawnData spawnData) {
         PhysicsComponent physics = new PhysicsComponent();
@@ -71,6 +59,7 @@ public class CustomEntityFactory implements EntityFactory {
                 .viewWithBBox("player.png")
                 .with(physics)
                 .with(new PlayerComponent(spawnData.getX(), spawnData.getY()))
+                .at(380,440)
                 .collidable()
                 .build();
     }
