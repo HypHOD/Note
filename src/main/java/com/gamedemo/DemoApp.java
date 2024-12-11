@@ -157,7 +157,7 @@ public class DemoApp extends GameApplication {
                 pill.removeFromWorld();
                 FXGL.inc(PILL_KEY, 1);
                 //???
-                if(FXGL.geti(PILL_KEY)>=50){
+                if(FXGL.geti(PILL_KEY)>=100||FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).isEmpty()){
                     FXGL.inc("level", 1);
                     Platform.runLater(()->initLevel());
                 }
@@ -188,7 +188,7 @@ public class DemoApp extends GameApplication {
                     for(int i=0;i<lifeLeft;i++){
                         FXGL.entityBuilder()
                                 .viewWithBBox(new ImageView(FXGL.image("PacMan2right.gif")))
-                                .at(FXGL.getAppWidth()-100-i*20,48)
+                                .at(FXGL.getAppWidth()-100-i*24,48)
                                 .type(GameObj.LIFE)
                                 .buildAndAttach();
                     }
