@@ -79,7 +79,7 @@
   <object id="95" type="Pill" x="540" y="400" width="20" height="20"/>
   <object id="96" type="Pill" x="540" y="420" width="20" height="20"/>
   <object id="97" name="blinky" type="Ghost" x="380" y="320" width="20" height="20"/>
-  <object id="101" type="FightFruitPoint" x="379.333" y="180" width="20" height="20"/>
+  <object id="101" type="FightFruitPoint" x="380" y="140.667" width="20" height="20"/>
   <object id="102" type="FightFruitPoint" x="221.333" y="180.667" width="20" height="20"/>
   <object id="103" type="FightFruitPoint" x="540" y="180" width="20" height="20"/>
  </objectgroup>

@@ -5,6 +5,7 @@ import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.texture.AnimatedTexture;
 import com.almasb.fxgl.texture.AnimationChannel;
 import com.almasb.fxgl.texture.Texture;
+import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
 import java.util.Random;
@@ -22,6 +23,7 @@ public class GhostComponent extends Component {
     private final AnimationChannel rightAnimation;
     private final AnimationChannel rightScaredAnimation;
     private AnimatedTexture textureAnimation;
+    private Color ghostColor = Color.RED;
 
     public GhostComponent(String name, double x, double y) {
         this.name = name;
@@ -91,15 +93,23 @@ public class GhostComponent extends Component {
     }
 
     public void turnBlue(){
-//        left = FXGL.texture("GhostScared1.gif");
-//        right = FXGL.texture("GhostScared2.gif");
         textureAnimation.loopAnimationChannel(leftScaredAnimation);
+        ghostColor = Color.BLUE;
+        FXGL.runOnce(()->{
+            textureAnimation.loopAnimationChannel(rightAnimation);
+            ghostColor = Color.RED;
+        }, Duration.seconds(30));
     }
 
-    public void turnRed(){
-//        left = FXGL.texture("Ghost1.gif");
-//        right = FXGL.texture("Ghost2.gif");
-        textureAnimation.loopAnimationChannel(rightAnimation);
+    public Color getColor(){
+        return ghostColor;
     }
+
+//    public void turnRed(){
+////        left = FXGL.texture("Ghost1.gif");
+////        right = FXGL.texture("Ghost2.gif");
+//        textureAnimation.loopAnimationChannel(rightAnimation);
+
+//    }
 
 }

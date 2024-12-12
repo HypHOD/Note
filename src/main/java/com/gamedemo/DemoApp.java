@@ -47,7 +47,7 @@ public class DemoApp extends GameApplication {
     private int fps;
     private Entity player;
     private int lifeLeft = 3;
-    public Color ColorOfGhost = Color.RED;
+    //public Color ColorOfGhost = Color.RED;
     private static int startLevel = 1;
 
 
@@ -145,6 +145,15 @@ public class DemoApp extends GameApplication {
     }
 
 
+    private void isNext() {
+        boolean nextFlag = FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).isEmpty();
+        if(nextFlag){
+            FXGL.inc("level", 1);
+            setLevelFromMapOrGameOver();
+        }
+        setLifeLeft();
+    }
+
     @Override
     protected void initPhysics() {
         System.out.println("initPhysics");
@@ -157,10 +166,10 @@ public class DemoApp extends GameApplication {
                 pill.removeFromWorld();
                 FXGL.inc(PILL_KEY, 1);
                 //???
-                if(FXGL.geti(PILL_KEY)>=100||FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).isEmpty()){
-                    FXGL.inc("level", 1);
-                    Platform.runLater(()->initLevel());
-                }
+//                if(FXGL.geti(PILL_KEY)>=100||FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).isEmpty()){
+//                    FXGL.inc("level", 1);
+//                    Platform.runLater(()->initLevel());
+//                }
             }
         });
 
@@ -174,8 +183,10 @@ public class DemoApp extends GameApplication {
         physics.addCollisionHandler(new CollisionHandler(GameObj.PLAYER, GameObj.GHOST) {
             @Override
             protected void onCollision(Entity player, Entity ghost) {
-                if(ColorOfGhost==Color.BLUE) {
+
+                if(ghost.getComponent(GhostComponent.class).getColor()==Color.BLUE) {
                     ghost.removeFromWorld();
+                    isNext();
                 }else{
                     FXGL.play("death.wav");
                     player.removeFromWorld();
@@ -185,19 +196,19 @@ public class DemoApp extends GameApplication {
                     for(Entity life:lifes){
                         life.removeFromWorld();
                     }
-                    for(int i=0;i<lifeLeft;i++){
-                        FXGL.entityBuilder()
-                                .viewWithBBox(new ImageView(FXGL.image("PacMan2right.gif")))
-                                .at(FXGL.getAppWidth()-100-i*24,48)
-                                .type(GameObj.LIFE)
-                                .buildAndAttach();
-                    }
+                    setLifeLeft();
+//                    for(int i=0;i<lifeLeft;i++){
+//                        FXGL.entityBuilder()
+//                                .viewWithBBox(new ImageView(FXGL.image("PacMan2right.gif")))
+//                                .at(FXGL.getAppWidth()-100-i*24,48)
+//                                .type(GameObj.LIFE)
+//                                .buildAndAttach();
+//                    }
 
                     if(lifeLeft==0) gameOver(false);
                     else{
                         FXGL.spawn("Player",new SpawnData(0,0).put("width",800).put("height",600));
                     }
-
                 }
             }
         });
@@ -207,19 +218,26 @@ public class DemoApp extends GameApplication {
             protected void onCollisionBegin(Entity player, Entity fruit) {
                 FXGL.play("fruit.wav");
                 fruit.removeFromWorld();
-                //敌人变蓝,可以击杀,10秒后变红
-                FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).forEach(ghost -> {
-                    ghost.getComponent(GhostComponent.class).turnBlue();
-                });
-                //FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnBlue();
-                ColorOfGhost = Color.BLUE;
-
-                if(!FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).isEmpty()){
-                    FXGL.getGameTimer().runOnceAfter(() -> {
-                        ColorOfGhost = Color.RED;
-                        FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnRed();
-                    }, Duration.seconds(10));
+                Color currentColor = FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).getColor();
+                //变色
+                if(!(currentColor ==Color.BLUE)) {
+                    FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).forEach(ghost -> {
+                        ghost.getComponent(GhostComponent.class).turnBlue();
+                    });
                 }
+                //FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnBlue();
+
+//                if(!FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).isEmpty()){
+//                    FXGL.getGameTimer().runOnceAfter(() -> {
+//                        ColorOfGhost = Color.RED;
+//                        if(FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).size()>1){
+//                            FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).forEach(ghost -> {
+//                                ghost.getComponent(GhostComponent.class).turnRed();
+//                            });
+//                            //FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnRed();
+//                        }
+//                    }, Duration.seconds(3));
+//                }
 
             }
         });
@@ -233,6 +251,15 @@ public class DemoApp extends GameApplication {
         builder.append("Your level: ").append(FXGL.geti("level")).append("\n");
         builder.append("Your remaining lives: ").append(lifeLeft).append("\n");
         FXGL.getDialogService().showMessageBox(builder.toString(),()->FXGL.getGameController().gotoGameMenu());
+        //重置游戏
+        FXGL.getWorldProperties().setValue(PILL_KEY, 0);
+        FXGL.getWorldProperties().setValue("level", 1);
+        //FXGL.getWorldProperties().setValue("lifeLeft", 3);
+        lifeLeft = 3;
+        setLifeLeft();
+        //buildLifeUI();
+        initLevel();
+
     }
 
     @Override
@@ -251,7 +278,7 @@ public class DemoApp extends GameApplication {
         levellabel.textProperty().bind(FXGL.getip("level").asString("Level: %d"));
         FXGL.addUINode(levellabel,FXGL.getAppWidth()-100,0);
 
-        //剩余生命数
+        //剩余生命数UI
         setLifeLeft();
 
     }
