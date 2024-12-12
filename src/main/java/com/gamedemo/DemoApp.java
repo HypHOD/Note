@@ -208,7 +208,10 @@ public class DemoApp extends GameApplication {
                 FXGL.play("fruit.wav");
                 fruit.removeFromWorld();
                 //敌人变蓝,可以击杀,10秒后变红
-                FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnBlue();
+                FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).forEach(ghost -> {
+                    ghost.getComponent(GhostComponent.class).turnBlue();
+                });
+                //FXGL.getGameWorld().getSingleton(GameObj.GHOST).getComponent(GhostComponent.class).turnBlue();
                 ColorOfGhost = Color.BLUE;
 
                 if(!FXGL.getGameWorld().getEntitiesByType(GameObj.GHOST).isEmpty()){
