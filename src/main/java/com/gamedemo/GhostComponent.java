@@ -98,7 +98,7 @@ public class GhostComponent extends Component {
         FXGL.runOnce(()->{
             textureAnimation.loopAnimationChannel(rightAnimation);
             ghostColor = Color.RED;
-        }, Duration.seconds(30));
+        }, Duration.seconds(3));
     }
 
     public Color getColor(){
