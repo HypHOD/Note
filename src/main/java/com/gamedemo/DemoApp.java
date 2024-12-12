@@ -61,7 +61,7 @@ public class DemoApp extends GameApplication {
     protected void initSettings(GameSettings gameSettings) {
         gameSettings.setWidth(800);
         gameSettings.setHeight(600);
-        gameSettings.setTitle("DemoApp");
+        gameSettings.setTitle("PacShit");
         gameSettings.setVersion("0.1");
         gameSettings.setMainMenuEnabled(true);
         gameSettings.setDeveloperMenuEnabled(true);
