@@ -245,6 +245,7 @@ public class DemoApp extends GameApplication {
 
     private void gameOver(boolean reachEndOfGame) {
         StringBuilder builder = new StringBuilder();
+        FXGL.play("Triumph!.wav");
         builder.append("Game Over!\n\n");
         if(reachEndOfGame) builder.append("You have reached the end of the game!\n\n");
         builder.append("Your score: ").append(FXGL.geti(PILL_KEY)).append("\n");
